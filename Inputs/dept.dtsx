@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="2026-02-05"
+  DTS:ObjectName="Snowflake_Filter_Transfer"
+  DTS:PackageType="5"
+  DTS:VersionID="1">
+<DTS:Property DTS:Name="PackageFormatVersion">8</DTS:Property>
+<DTS:ConnectionManagers>
+<DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[Snowflake_Source]"
+      DTS:ObjectName="Snowflake_Source">
+<DTS:ObjectData>
+<DTS:ConnectionManager
+          DTS:ConnectionString="Driver={SnowflakeDTSODBC};Server=your_account.snowflakecomputing.com;Database=PC_COALESCE_DB;Schema=RAW;Warehouse=your_wh;UID=your_user;Pwd=your_password;" />
+</DTS:ObjectData>
+</DTS:ConnectionManager>
+</DTS:ConnectionManagers>
+ 
+  <DTS:Executables>
+<DTS:Executable
+      DTS:refId="Package\Data Flow Task"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:Description="Data Flow Task"
+      DTS:DTSID="{B9E8A232-4112-4C1F-9E9A-C1A1E1A1E1A1}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Data Flow Task"
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;">
+<DTS:ObjectData>
+<pipeline version="1">
+<components>
+<component id="1" componentClassID="Microsoft.OLEDBSource" name="Snowflake Source">
+<properties>
+<property dataType="System.String" name="SqlCommand" xml:space="preserve">SELECT DEPT_ID, DEPT_NAME, LOCATION FROM PC_COALESCE_DB.RAW.DEPARTMENT</property>
+</properties>
+</component>
+ 
+            <component id="2" componentClassID="Microsoft.ConditionalSplit" name="Filter Chennai">
+<inputs>
+<input id="21" name="Conditional Split Input">
+<inputColumns>
+<inputColumn id="211" cachedName="LOCATION" lineageId="111" />
+</inputColumns>
+</input>
+</inputs>
+<outputs>
+<output id="22" name="Chennai Data" exclusionGroup="1" synchronousInputID="21">
+<properties>
+<property dataType="System.String" name="Expression" xml:space="preserve">LOCATION == "Chennai"</property>
+<property dataType="System.Boolean" name="FriendlyExpression">LOCATION == "Chennai"</property>
+</properties>
+</output>
+</outputs>
+</component>
+ 
+            <component id="3" componentClassID="Microsoft.OLEDBDestination" name="Snowflake Target">
+<properties>
+<property dataType="System.String" name="OpenRowset">"PC_COALESCE_DB"."RAW"."DEPARTMENT_NEW"</property>
+</properties>
+</component>
+</components>
+<paths>
+<path id="101" startId="1" endId="2" />
+<path id="102" startId="22" endId="3" />
+</paths>
+</pipeline>
+</DTS:ObjectData>
+</DTS:Executable>
+</DTS:Executables>
+</DTS:Executable>
