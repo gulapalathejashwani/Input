@@ -1,0 +1,281 @@
+{
+  "package_name": "EDW_BC_Load_DimBillingAccount",
+  "description": "Loads and updates Snowflake table DIMBILLINGACCOUNT from GuideWire and related source tables, with SCD logic and audit row counts.",
+  "sources": [
+    {
+      "table_name": "BC_ACCOUNT",
+      "columns": [
+        {"column_name": "ACCOUNTNUMBER", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "ACCOUNTNAME", "data_type": "STRING", "nullable": true},
+        {"column_name": "ACCOUNTTYPE", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "BILLINGLEVEL", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "SERVICETIER", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "SECURITYZONEID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "SEGMENT", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "CLOSEDATE", "data_type": "DATETIME", "nullable": true},
+        {"column_name": "CREATETIME", "data_type": "DATETIME", "nullable": true},
+        {"column_name": "DELINQUENCYSTATUS", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "FIRSTTWICEPERMTHINVOICEDOM", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "SECONDTWICEPERMTHINVOICEDOM", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "PUBLICID", "data_type": "STRING", "nullable": true},
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true},
+        {"column_name": "RETIRED", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "UPDATETIME", "data_type": "DATETIME", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BC_PARENTACCT",
+      "columns": [
+        {"column_name": "OWNERID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "FOREIGNENTITYID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true},
+        {"column_name": "UPDATETIME", "data_type": "DATETIME", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BC_ACCOUNTCONTACT",
+      "columns": [
+        {"column_name": "INSUREDACCOUNTID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "CONTACTID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true},
+        {"column_name": "UPDATETIME", "data_type": "DATETIME", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BC_ACCOUNTCONTACTROLE",
+      "columns": [
+        {"column_name": "ACCOUNTCONTACTID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "ROLE", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true},
+        {"column_name": "UPDATETIME", "data_type": "DATETIME", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BCTL_ACCOUNTROLE",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "TYPECODE", "data_type": "STRING", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BC_CONTACT",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "FIRSTNAME", "data_type": "STRING", "nullable": true},
+        {"column_name": "LASTNAME", "data_type": "STRING", "nullable": true},
+        {"column_name": "PRIMARYADDRESSID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true},
+        {"column_name": "UPDATETIME", "data_type": "DATETIME", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BC_ADDRESS",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "ADDRESSLINE1", "data_type": "STRING", "nullable": true},
+        {"column_name": "ADDRESSLINE2", "data_type": "STRING", "nullable": true},
+        {"column_name": "ADDRESSLINE3", "data_type": "STRING", "nullable": true},
+        {"column_name": "CITY", "data_type": "STRING", "nullable": true},
+        {"column_name": "POSTALCODE", "data_type": "STRING", "nullable": true},
+        {"column_name": "STATE", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true},
+        {"column_name": "UPDATETIME", "data_type": "DATETIME", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BCTL_STATE",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "NAME", "data_type": "STRING", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BCTL_ACCOUNTTYPE",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "NAME", "data_type": "STRING", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BCTL_BILLINGLEVEL",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "NAME", "data_type": "STRING", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BCTL_CUSTOMERSERVICETIER",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "NAME", "data_type": "STRING", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BC_SECURITYZONE",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "NAME", "data_type": "STRING", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true},
+        {"column_name": "UPDATETIME", "data_type": "DATETIME", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BCTL_DELINQUENCYSTATUS",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "NAME", "data_type": "STRING", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "BCTL_ACCOUNTSEGMENT",
+      "columns": [
+        {"column_name": "ID", "data_type": "INTEGER", "nullable": true},
+        {"column_name": "NAME", "data_type": "STRING", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "DIMBILLINGACCOUNT",
+      "columns": [
+        {"column_name": "PUBLICID", "data_type": "STRING", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "STRING", "nullable": true}
+      ]
+    }
+  ],
+  "joins": [
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_ACCOUNTTYPE",
+      "join_type": "LEFT",
+      "condition": "BC_ACCOUNT.ACCOUNTTYPE = BCTL_ACCOUNTTYPE.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BC_PARENTACCT",
+      "join_type": "LEFT",
+      "condition": "BC_PARENTACCT.OWNERID = BC_ACCOUNT.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_BILLINGLEVEL",
+      "join_type": "LEFT",
+      "condition": "BC_ACCOUNT.BILLINGLEVEL = BCTL_BILLINGLEVEL.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_CUSTOMERSERVICETIER",
+      "join_type": "LEFT",
+      "condition": "BC_ACCOUNT.SERVICETIER = BCTL_CUSTOMERSERVICETIER.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BC_SECURITYZONE",
+      "join_type": "LEFT",
+      "condition": "BC_ACCOUNT.SECURITYZONEID = BC_SECURITYZONE.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_DELINQUENCYSTATUS",
+      "join_type": "LEFT",
+      "condition": "BC_ACCOUNT.DELINQUENCYSTATUS = BCTL_DELINQUENCYSTATUS.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_ACCOUNTSEGMENT",
+      "join_type": "LEFT",
+      "condition": "BC_ACCOUNT.SEGMENT = BCTL_ACCOUNTSEGMENT.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "INSUREDINFO",
+      "join_type": "LEFT",
+      "condition": "INSUREDINFO.ACCOUNTID = BC_ACCOUNT.ID"
+    },
+    {
+      "left_table": "INSUREDINFO",
+      "right_table": "BC_ACCOUNTCONTACT",
+      "join_type": "INNER",
+      "condition": "BC_ACCOUNTCONTACT.ID = INSUREDINFO.ACCOUNTID"
+    },
+    {
+      "left_table": "INSUREDINFO",
+      "right_table": "BC_ACCOUNTCONTACTROLE",
+      "join_type": "INNER",
+      "condition": "BC_ACCOUNTCONTACTROLE.ACCOUNTCONTACTID = BC_ACCOUNTCONTACT.ID"
+    },
+    {
+      "left_table": "INSUREDINFO",
+      "right_table": "BCTL_ACCOUNTROLE",
+      "join_type": "INNER",
+      "condition": "BCTL_ACCOUNTROLE.ID = BC_ACCOUNTCONTACTROLE.ROLE AND BCTL_ACCOUNTROLE.TYPECODE = 'insured'"
+    },
+    {
+      "left_table": "INSUREDINFO",
+      "right_table": "BC_CONTACT",
+      "join_type": "LEFT",
+      "condition": "BC_CONTACT.ID = BC_ACCOUNTCONTACT.CONTACTID"
+    },
+    {
+      "left_table": "INSUREDINFO",
+      "right_table": "BC_ADDRESS",
+      "join_type": "LEFT",
+      "condition": "BC_ADDRESS.ID = BC_CONTACT.PRIMARYADDRESSID"
+    },
+    {
+      "left_table": "INSUREDINFO",
+      "right_table": "BCTL_STATE",
+      "join_type": "LEFT",
+      "condition": "BCTL_STATE.ID = BC_ADDRESS.STATE"
+    },
+    {
+      "left_table": "LOOKUP_INPUT",
+      "right_table": "DIMBILLINGACCOUNT",
+      "join_type": "INNER",
+      "condition": "LOOKUP_INPUT.PUBLICID = DIMBILLINGACCOUNT.PUBLICID"
+    }
+  ],
+  "transformations": [
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts source rows from OLE_SRC - GuideWire",
+      "logic": "Variable: User::SourceCount"
+    },
+    {
+      "type": "DERIVED",
+      "description": "Adds or overwrites BatchID column",
+      "logic": "BatchID = @[User::BatchID]"
+    },
+    {
+      "type": "LOOKUP",
+      "description": "Lookup BeanVersion from DIMBILLINGACCOUNT by PUBLICID",
+      "logic": "SQL: Select Publicid, BeanVersion from DimBillingAccount; Join: PUBLICID = DIMBILLINGACCOUNT.PUBLICID"
+    },
+    {
+      "type": "CONDITIONAL_SPLIT",
+      "description": "Routes rows based on whether BeanVersion matches EDWBeanVersion",
+      "logic": "BeanVersion == EDWBeanVersion"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts unchanged rows (BeanVersion matches)",
+      "logic": "Variable: User::UnChangeCount"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts new insert rows (lookup no match)",
+      "logic": "Variable: User::InsertCount"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts update rows (BeanVersion different)",
+      "logic": "Variable: User::UpdateCount"
+    }
+  ],
+  "target": {
+    "table_name": "DIMBILLINGACCOUNT",
+    "load_type": "INSERT/UPDATE",
+    "source": "Rows with no match (INSERT) and rows with different BeanVersion (UPDATE) from the post-transformation dataset routed through Conditional Split and Row Count components"
+  }
+}
