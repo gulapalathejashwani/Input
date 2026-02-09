@@ -1,0 +1,67 @@
+{
+  "package_name": "EDW_BC_Load_DimBillingAccount",
+  "description": "Loads and updates the SNOWFLAKE table DIMBILLINGACCOUNT from GuideWire staging and reference tables using incremental logic and BeanVersion matching. Includes derived columns, conditional split, lookup, and row count logic.",
+  "sources": [
+    {
+      "table_name": "BC_ACCOUNT",
+      "columns": [
+        {"column_name": "ACCOUNTNUMBER", "data_type": "INT", "nullable": true},
+        {"column_name": "ACCOUNTNAME", "data_type": "VARCHAR(255)", "nullable": true},
+        {"column_name": "ACCOUNTTYPENAME", "data_type": "VARCHAR(50)", "nullable": true},
+        {"column_name": "PARENTACCOUNTNUMBER", "data_type": "INT", "nullable": true},
+        {"column_name": "BILLINGLEVELNAME", "data_type": "VARCHAR(100)", "nullable": true},
+        {"column_name": "SEGMENT", "data_type": "VARCHAR(50)", "nullable": true},
+        {"column_name": "SERVICETIERNAME", "data_type": "VARCHAR(50)", "nullable": true},
+        {"column_name": "SECURITYZONE", "data_type": "VARCHAR(60)", "nullable": true},
+        {"column_name": "FIRSTNAME", "data_type": "VARCHAR(45)", "nullable": true},
+        {"column_name": "LASTNAME", "data_type": "VARCHAR(45)", "nullable": true},
+        {"column_name": "ADDRESSLINE1", "data_type": "VARCHAR(60)", "nullable": true},
+        {"column_name": "ADDRESSLINE2", "data_type": "VARCHAR(60)", "nullable": true},
+        {"column_name": "ADDRESSLINE3", "data_type": "VARCHAR(60)", "nullable": true},
+        {"column_name": "CITY", "data_type": "VARCHAR(50)", "nullable": true},
+        {"column_name": "STATE", "data_type": "VARCHAR(50)", "nullable": true},
+        {"column_name": "POSTALCODE", "data_type": "VARCHAR(50)", "nullable": true},
+        {"column_name": "ACCOUNTCLOSEDATE", "data_type": "TIMESTAMP", "nullable": true},
+        {"column_name": "ACCOUNTCREATIONDATE", "data_type": "TIMESTAMP", "nullable": true},
+        {"column_name": "DELIQUENCYSTATUSNAME", "data_type": "VARCHAR(50)", "nullable": true},
+        {"column_name": "FIRSTTWICEPERMONTHINVOICEDAYOFMONTH", "data_type": "INT", "nullable": true},
+        {"column_name": "SECONDTWICEPERMONTHINVOICEDAYOFMONTH", "data_type": "INT", "nullable": true},
+        {"column_name": "PUBLICID", "data_type": "VARCHAR(20)", "nullable": false},
+        {"column_name": "GWROWNUMBER", "data_type": "BIGINT", "nullable": true},
+        {"column_name": "BEANVERSION", "data_type": "VARCHAR(20)", "nullable": true},
+        {"column_name": "ISACTIVE", "data_type": "INT", "nullable": true},
+        {"column_name": "LEGACYSOURCESYSTEM", "data_type": "VARCHAR(2)", "nullable": true}
+      ]
+    }
+  ],
+  "joins": [
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "DIMBILLINGACCOUNT",
+      "join_type": "LEFT",
+      "condition": "BC_ACCOUNT.PUBLICID = DIMBILLINGACCOUNT.PUBLICID"
+    }
+  ],
+  "transformations": [
+    {
+      "type": "LOOKUP",
+      "description": "Lookup existing records in DIMBILLINGACCOUNT by PUBLICID to get EDWBeanVersion for SCD2 comparison.",
+      "logic": "SELECT PUBLICID, BEANVERSION FROM DIMBILLINGACCOUNT WHERE PUBLICID = ?"
+    },
+    {
+      "type": "DERIVED",
+      "description": "Add or overwrite the column BATCHID with the current batch variable.",
+      "logic": "BATCHID = @[User::BatchID]"
+    },
+    {
+      "type": "CONDITIONAL_SPLIT",
+      "description": "Route rows based on BeanVersion comparison (BeanVersion == EDWBeanVersion). Routes 'SameBeanVersion' and 'DifferentBeanVersion'.",
+      "logic": "BeanVersion == EDWBeanVersion"
+    }
+  ],
+  "target": {
+    "table_name": "DIMBILLINGACCOUNT",
+    "load_type": "INSERT/UPDATE",
+    "source": "Post-transform rows from BC_ACCOUNT joined/compared with DIMBILLINGACCOUNT, with derived BATCHID and SCD logic via BeanVersion comparison"
+  }
+}
