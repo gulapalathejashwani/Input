@@ -1,0 +1,92 @@
+{
+  "package_name": "EDW_BC_Load_DimBillingAccount",
+  "data_flow": {
+    "sources": [
+      {
+        "name": "OLE_SRC - GuideWire",
+        "type": "OLE DB Source",
+        "sql": "WITH ParentAcct AS ( SELECT pa.OwnerID, cast(act.AccountNumber as int) as ParentAccountNumber, CONCAT(pa.BeanVersion,act.BeanVersion) as BeanVersion, act.UpdateTime FROM bc_ParentAcct pa JOIN bc_account act ON act.ID = pa.ForeignEntityID ) ,InsuredInfo AS ( SELECT ac.InsuredAccountID as AccountID, c.FirstName, c.LastName, a.AddressLine1, a.AddressLine2, a.AddressLine3, a.City, a.PostalCode, tls.NAME as State, CONCAT(ac.BeanVersion,acr.BeanVersion,c.BeanVersion ,a.BeanVersion) as BeanVersion, ac.UpdateTime as ac_UpdateTime, acr.UpdateTime as acr_UpdateTime, c.UpdateTime as c_UpdateTime, a.UpdateTime as a_UpdateTime FROM bc_accountcontact ac JOIN bc_accountcontactrole acr ON acr.AccountContactID = ac.ID JOIN bctl_accountrole tlar ON tlar.ID = acr.Role LEFT JOIN bc_contact c ON c.ID = ac.ContactID LEFT JOIN bc_address a ON a.ID = c.PrimaryAddressID LEFT JOIN bctl_state tls ON tls.ID = a.State WHERE tlar.TYPECODE = 'insured' ) SELECT Distinct dt.AccountNumber, dt.AccountName, CAST(at.NAME AS VARCHAR(50)) as AccountTypeName, ParentAcct.ParentAccountNumber, CAST(bl.NAME AS VARCHAR(100)) as BillingLevelName, CAST(bas.NAME AS VARCHAR(50)) as Segment, CAST(cst.NAME AS VARCHAR(50)) as ServiceTierName, sz.Name as SecurityZone, InsuredInfo.FirstName, InsuredInfo.LastName, InsuredInfo.AddressLine1, InsuredInfo.AddressLine2, InsuredInfo.AddressLine3, CAST(InsuredInfo.City AS VARCHAR(50)) as City, CAST(InsuredInfo.State AS VARCHAR(50)) as State, CAST(InsuredInfo.PostalCode AS VARCHAR(50)) as PostalCode, dt.CloseDate as AccountCloseDate, dt.CreateTime as AccountCreationDate, CAST(tlds.NAME AS VARCHAR(50)) as DeliquencyStatusName,dt.FirstTwicePerMthInvoiceDOM as FirstTwicePerMonthInvoiceDayOfMonth, dt.SecondTwicePerMthInvoiceDOM as SecondTwicePerMonthInvoiceDayOfMonth, dt.PublicID, dt.ID as GWRowNumber, CAST(CONCAT(dt.BeanVersion ,ParentAcct.BeanVersion, sz.BeanVersion) AS VARCHAR(20)) as BeanVersion, CASE dt.Retired WHEN 0 THEN 1 ELSE 0 END as IsActive, 'WC' as LegacySourceSystem FROM bc_account dt LEFT JOIN bctl_accounttype at ON at.ID = dt.AccountType LEFT JOIN ParentAcct ON ParentAcct.OwnerID = dt.ID LEFT JOIN bctl_billinglevel bl ON bl.ID = dt.BillingLevel LEFT JOIN bctl_customerservicetier cst ON cst.ID = dt.ServiceTier LEFT JOIN bc_securityzone sz ON sz.ID = dt.SecurityZoneID LEFT JOIN InsuredInfo ON InsuredInfo.AccountID = dt.ID LEFT JOIN bctl_delinquencystatus tlds ON tlds.ID = dt.DelinquencyStatus LEFT JOIN bctl_accountsegment bas ON bas.ID = dt.Segment WHERE (dt.UpdateTime >= DATEADD(D,?,CAST(GETDATE() AS DATE)) OR ParentAcct.UpdateTime >= DATEADD(D,?,CAST(GETDATE() AS DATE)) OR sz.UpdateTime >= DATEADD(D,?,CAST(GETDATE() AS DATE)) OR InsuredInfo.ac_UpdateTime >= DATEADD(D,?,CAST(GETDATE() AS DATE)) OR InsuredInfo.acr_UpdateTime >= DATEADD(D,?,CAST(GETDATE() AS DATE)) OR InsuredInfo.c_UpdateTime >= DATEADD(D,?,CAST(GETDATE() AS DATE)) OR InsuredInfo.a_UpdateTime >= DATEADD(D,?,CAST(GETDATE() AS DATE)))",
+        "tables": ["bc_account","bctl_accounttype","bc_ParentAcct","bctl_billinglevel","bctl_customerservicetier","bc_securityzone","bc_accountcontact","bc_accountcontactrole","bctl_accountrole","bc_contact","bc_address","bctl_state","bctl_delinquencystatus","bctl_accountsegment"],
+        "columns": ["AccountNumber","AccountName","AccountTypeName","ParentAccountNumber","BillingLevelName","Segment","ServiceTierName","SecurityZone","FirstName","LastName","AddressLine1","AddressLine2","AddressLine3","City","State","PostalCode","AccountCloseDate","AccountCreationDate","DeliquencyStatusName","FirstTwicePerMonthInvoiceDayOfMonth","SecondTwicePerMonthInvoiceDayOfMonth","PublicID","GWRowNumber","BeanVersion","IsActive","LegacySourceSystem"]
+      },
+      {
+        "name": "LKP - DimBillingAccount",
+        "type": "Lookup Reference",
+        "sql": "SELECT Publicid, BeanVersion FROM DimBillingAccount",
+        "tables": ["DimBillingAccount"],
+        "columns": ["Publicid","BeanVersion"]
+      }
+    ],
+    "joins": [
+      {
+        "left_table": "Data Flow (PublicID from OLE DB Source)",
+        "right_table": "DimBillingAccount",
+        "type": "Lookup Join",
+        "condition": "DataFlow.PublicID = DimBillingAccount.Publicid"
+      }
+    ],
+    "transformations": [
+      {
+        "type": "Row Count",
+        "name": "CNT - Source Count",
+        "purpose": "Row auditing",
+        "expression": "User::SourceCount"
+      },
+      {
+        "type": "Derived Column",
+        "name": "DRV - BatchID & Legacy",
+        "purpose": "Add/overwrite BatchID",
+        "expression": "@[User::BatchID]"
+      },
+      {
+        "type": "Lookup",
+        "name": "LKP - DimBillingAccount",
+        "purpose": "BeanVersion lookup",
+        "expression": "SELECT Publicid, BeanVersion FROM DimBillingAccount"
+      },
+      {
+        "type": "Conditional Split",
+        "name": "CSPL - Check BeanVersion",
+        "purpose": "Compare BeanVersion",
+        "expression": "BeanVersion == EDWBeanVersion"
+      },
+      {
+        "type": "Row Count",
+        "name": "CNT - Unchange Count",
+        "purpose": "Count unchanged rows",
+        "expression": "User::UnChangeCount"
+      },
+      {
+        "type": "Row Count",
+        "name": "CNT - Update Count",
+        "purpose": "Count changed rows",
+        "expression": "User::UpdateCount"
+      },
+      {
+        "type": "Row Count",
+        "name": "CNT - Insert Count",
+        "purpose": "Count inserted rows",
+        "expression": "User::InsertCount"
+      }
+    ],
+    "targets": [
+      {
+        "name": "DIMBILLINGACCOUNT",
+        "type": "Snowflake Table",
+        "load_behavior": ["INSERT", "UPDATE"],
+        "insert_source": "Lookup No Match Output",
+        "update_source": "Conditional Split (DifferentBeanVersion)",
+        "incremental": true,
+        "scd_type": 1
+      }
+    ]
+  },
+  "ssis_variables": [
+    "@[User::BatchID]",
+    "@[User::IncrementDays]",
+    "@[User::SourceCount]",
+    "@[User::InsertCount]",
+    "@[User::UpdateCount]",
+    "@[User::UnChangeCount]"
+  ]
+}
