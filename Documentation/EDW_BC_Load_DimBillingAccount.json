@@ -247,17 +247,17 @@
     },
     {
       "type": "ROW_COUNT",
-      "description": "Counts records inserted (no match in lookup).","
+      "description": "Counts records inserted (no match in lookup)."
       "logic": "CNT - Insert Count, variable: User::InsertCount"
     },
     {
       "type": "ROW_COUNT",
-      "description": "Counts records updated (BeanVersion different).","
+      "description": "Counts records updated (BeanVersion different)."
       "logic": "CNT - Update Count, variable: User::UpdateCount"
     },
     {
       "type": "ROW_COUNT",
-      "description": "Counts unchanged records (BeanVersion same).","
+      "description": "Counts unchanged records (BeanVersion same)."
       "logic": "CNT - UnChange Count, variable: User::UnChangeCount"
     }
   ],
