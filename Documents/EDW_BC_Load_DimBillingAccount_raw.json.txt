@@ -1,0 +1,216 @@
+{
+  "package_name": "EDW_BC_Load_DimBillingAccount",
+  "description": "Loads and synchronizes DimBillingAccount dimension from GuideWire and related sources, performing SCD logic and audit row counts.",
+  "sources": [
+    {
+      "table_name": "BC_ACCOUNT",
+      "columns": ["AccountNumber","AccountName","AccountType","BillingLevel","ServiceTier","SecurityZoneID","CloseDate","CreateTime","DelinquencyStatus","Segment","PublicID","ID","BeanVersion","Retired"]
+    },
+    {
+      "table_name": "BCTL_ACCOUNTTYPE",
+      "columns": ["ID","NAME"]
+    },
+    {
+      "table_name": "BC_PARENTACCT",
+      "columns": ["OwnerID","ForeignEntityID","BeanVersion","UpdateTime"]
+    },
+    {
+      "table_name": "BC_ACCOUNTCONTACT",
+      "columns": ["InsuredAccountID","ContactID","BeanVersion","UpdateTime","ID"]
+    },
+    {
+      "table_name": "BC_ACCOUNTCONTACTROLE",
+      "columns": ["AccountContactID","Role","BeanVersion","UpdateTime","ID"]
+    },
+    {
+      "table_name": "BCTL_ACCOUNTROLE",
+      "columns": ["ID","TYPECODE"]
+    },
+    {
+      "table_name": "BC_CONTACT",
+      "columns": ["ID","FirstName","LastName","PrimaryAddressID","BeanVersion","UpdateTime"]
+    },
+    {
+      "table_name": "BC_ADDRESS",
+      "columns": ["ID","AddressLine1","AddressLine2","AddressLine3","City","PostalCode","State","BeanVersion","UpdateTime"]
+    },
+    {
+      "table_name": "BCTL_STATE",
+      "columns": ["ID","NAME"]
+    },
+    {
+      "table_name": "BCTL_BILLINGLEVEL",
+      "columns": ["ID","NAME"]
+    },
+    {
+      "table_name": "BCTL_CUSTOMERSERVICETIER",
+      "columns": ["ID","NAME"]
+    },
+    {
+      "table_name": "BC_SECURITYZONE",
+      "columns": ["ID","Name","BeanVersion","UpdateTime"]
+    },
+    {
+      "table_name": "BCTL_DELINQUENCYSTATUS",
+      "columns": ["ID","NAME"]
+    },
+    {
+      "table_name": "BCTL_ACCOUNTSEGMENT",
+      "columns": ["ID","NAME"]
+    },
+    {
+      "table_name": "DIMBILLINGACCOUNT",
+      "columns": ["PublicID","BeanVersion"]
+    }
+  ],
+  "joins": [
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_ACCOUNTTYPE",
+      "join_type": "LEFT",
+      "condition": "BCTL_ACCOUNTTYPE.ID = BC_ACCOUNT.AccountType"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BC_PARENTACCT",
+      "join_type": "LEFT",
+      "condition": "BC_PARENTACCT.OwnerID = BC_ACCOUNT.ID"
+    },
+    {
+      "left_table": "BC_PARENTACCT",
+      "right_table": "BC_ACCOUNT (act)",
+      "join_type": "INNER",
+      "condition": "act.ID = BC_PARENTACCT.ForeignEntityID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_BILLINGLEVEL",
+      "join_type": "LEFT",
+      "condition": "BCTL_BILLINGLEVEL.ID = BC_ACCOUNT.BillingLevel"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_CUSTOMERSERVICETIER",
+      "join_type": "LEFT",
+      "condition": "BCTL_CUSTOMERSERVICETIER.ID = BC_ACCOUNT.ServiceTier"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BC_SECURITYZONE",
+      "join_type": "LEFT",
+      "condition": "BC_SECURITYZONE.ID = BC_ACCOUNT.SecurityZoneID"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "INSUREDINFO",
+      "join_type": "LEFT",
+      "condition": "INSUREDINFO.AccountID = BC_ACCOUNT.ID"
+    },
+    {
+      "left_table": "INSUREDINFO",
+      "right_table": "BC_ACCOUNTCONTACT",
+      "join_type": "INNER",
+      "condition": "BC_ACCOUNTCONTACT.ID = INSUREDINFO.AccountID"
+    },
+    {
+      "left_table": "BC_ACCOUNTCONTACT",
+      "right_table": "BC_ACCOUNTCONTACTROLE",
+      "join_type": "INNER",
+      "condition": "BC_ACCOUNTCONTACTROLE.AccountContactID = BC_ACCOUNTCONTACT.ID"
+    },
+    {
+      "left_table": "BC_ACCOUNTCONTACTROLE",
+      "right_table": "BCTL_ACCOUNTROLE",
+      "join_type": "INNER",
+      "condition": "BCTL_ACCOUNTROLE.ID = BC_ACCOUNTCONTACTROLE.Role"
+    },
+    {
+      "left_table": "BC_ACCOUNTCONTACT",
+      "right_table": "BC_CONTACT",
+      "join_type": "LEFT",
+      "condition": "BC_CONTACT.ID = BC_ACCOUNTCONTACT.ContactID"
+    },
+    {
+      "left_table": "BC_CONTACT",
+      "right_table": "BC_ADDRESS",
+      "join_type": "LEFT",
+      "condition": "BC_ADDRESS.ID = BC_CONTACT.PrimaryAddressID"
+    },
+    {
+      "left_table": "BC_ADDRESS",
+      "right_table": "BCTL_STATE",
+      "join_type": "LEFT",
+      "condition": "BCTL_STATE.ID = BC_ADDRESS.State"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_DELINQUENCYSTATUS",
+      "join_type": "LEFT",
+      "condition": "BCTL_DELINQUENCYSTATUS.ID = BC_ACCOUNT.DelinquencyStatus"
+    },
+    {
+      "left_table": "BC_ACCOUNT",
+      "right_table": "BCTL_ACCOUNTSEGMENT",
+      "join_type": "LEFT",
+      "condition": "BCTL_ACCOUNTSEGMENT.ID = BC_ACCOUNT.Segment"
+    },
+    {
+      "left_table": "OLE_SRC_GUIDEWIRE",
+      "right_table": "DIMBILLINGACCOUNT",
+      "join_type": "LEFT",
+      "condition": "DIMBILLINGACCOUNT.PublicID = OLE_SRC_GUIDEWIRE.PublicID"
+    }
+  ],
+  "transformations": [
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts rows from OLE DB Source into variable User::SourceCount",
+      "logic": "Row count variable assignment"
+    },
+    {
+      "type": "DERIVED",
+      "description": "Adds/overwrites column BatchID with value from variable User::BatchID",
+      "logic": "BatchID = @[User::BatchID]"
+    },
+    {
+      "type": "LOOKUP",
+      "description": "Lookup BeanVersion from DimBillingAccount by PublicID. Output: EDWBeanVersion",
+      "logic": "Lookup SQL: Select Publicid, BeanVersion from DimBillingAccount; Join: PublicID = Publicid"
+    },
+    {
+      "type": "CONDITIONAL_SPLIT",
+      "description": "Routes rows by BeanVersion comparison",
+      "logic": "BeanVersion == EDWBeanVersion → SameBeanVersion; else → DifferentBeanVersion"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts rows with same BeanVersion into User::UnChangeCount",
+      "logic": "Row count variable assignment"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts rows with no lookup match into User::InsertCount",
+      "logic": "Row count variable assignment"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Counts rows with different BeanVersion into User::UpdateCount",
+      "logic": "Row count variable assignment"
+    },
+    {
+      "type": "COMMAND",
+      "description": "Executes UPDATE on DimBillingAccount for rows with different BeanVersion",
+      "logic": "Parameterized UPDATE on DimBillingAccount for changed records"
+    },
+    {
+      "type": "DESTINATION",
+      "description": "Loads new records (no match in lookup) into DimBillingAccount",
+      "logic": "FastLoad INSERT into DimBillingAccount"
+    }
+  ],
+  "target": {
+    "table_name": "DIMBILLINGACCOUNT",
+    "load_type": "INSERT/UPDATE",
+    "source": "Records after all joins and transformations; INSERT for new records, UPDATE for changed BeanVersion"
+  }
+}
