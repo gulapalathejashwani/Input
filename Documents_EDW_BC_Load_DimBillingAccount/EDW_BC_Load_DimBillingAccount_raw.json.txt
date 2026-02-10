@@ -1,0 +1,195 @@
+{
+  "package_name": "EDW_BC_Load_DimBillingAccount",
+  "description": "Loads and updates DimBillingAccount dimension from GuideWire sources with SCD logic and audit tracking.",
+  "sources": [
+    {
+      "table_name": "bc_account",
+      "columns": [
+        {"column_name": "AccountNumber", "data_type": "str", "nullable": true},
+        {"column_name": "AccountName", "data_type": "str", "nullable": true},
+        {"column_name": "AccountTypeName", "data_type": "str", "nullable": true},
+        {"column_name": "BillingLevelName", "data_type": "str", "nullable": true},
+        {"column_name": "Segment", "data_type": "str", "nullable": true},
+        {"column_name": "ServiceTierName", "data_type": "str", "nullable": true},
+        {"column_name": "SecurityZone", "data_type": "str", "nullable": true},
+        {"column_name": "AccountCloseDate", "data_type": "dbTimeStamp2", "nullable": true},
+        {"column_name": "AccountCreationDate", "data_type": "dbTimeStamp2", "nullable": true},
+        {"column_name": "DeliquencyStatusName", "data_type": "str", "nullable": true},
+        {"column_name": "FirstTwicePerMonthInvoiceDayOfMonth", "data_type": "i4", "nullable": true},
+        {"column_name": "SecondTwicePerMonthInvoiceDayOfMonth", "data_type": "i4", "nullable": true},
+        {"column_name": "PublicID", "data_type": "str", "nullable": false},
+        {"column_name": "GWRowNumber", "data_type": "i8", "nullable": true},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true},
+        {"column_name": "IsActive", "data_type": "i4", "nullable": true},
+        {"column_name": "LegacySourceSystem", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bc_ParentAcct",
+      "columns": [
+        {"column_name": "OwnerID", "data_type": "i4", "nullable": false},
+        {"column_name": "ParentAccountNumber", "data_type": "i4", "nullable": true},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true},
+        {"column_name": "UpdateTime", "data_type": "dbTimeStamp2", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bc_accountcontact",
+      "columns": [
+        {"column_name": "InsuredAccountID", "data_type": "i4", "nullable": false},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true},
+        {"column_name": "UpdateTime", "data_type": "dbTimeStamp2", "nullable": true},
+        {"column_name": "ContactID", "data_type": "i4", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bc_accountcontactrole",
+      "columns": [
+        {"column_name": "AccountContactID", "data_type": "i4", "nullable": false},
+        {"column_name": "Role", "data_type": "i4", "nullable": true},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true},
+        {"column_name": "UpdateTime", "data_type": "dbTimeStamp2", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bctl_accountrole",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "TYPECODE", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bc_contact",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "FirstName", "data_type": "str", "nullable": true},
+        {"column_name": "LastName", "data_type": "str", "nullable": true},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true},
+        {"column_name": "UpdateTime", "data_type": "dbTimeStamp2", "nullable": true},
+        {"column_name": "PrimaryAddressID", "data_type": "i4", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bc_address",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "AddressLine1", "data_type": "str", "nullable": true},
+        {"column_name": "AddressLine2", "data_type": "str", "nullable": true},
+        {"column_name": "AddressLine3", "data_type": "str", "nullable": true},
+        {"column_name": "City", "data_type": "str", "nullable": true},
+        {"column_name": "PostalCode", "data_type": "str", "nullable": true},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true},
+        {"column_name": "UpdateTime", "data_type": "dbTimeStamp2", "nullable": true},
+        {"column_name": "State", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bctl_state",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "NAME", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bctl_accounttype",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "NAME", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bctl_billinglevel",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "NAME", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bctl_customerservicetier",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "NAME", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bc_securityzone",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "Name", "data_type": "str", "nullable": true},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true},
+        {"column_name": "UpdateTime", "data_type": "dbTimeStamp2", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bctl_delinquencystatus",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "NAME", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "bctl_accountsegment",
+      "columns": [
+        {"column_name": "ID", "data_type": "i4", "nullable": false},
+        {"column_name": "NAME", "data_type": "str", "nullable": true}
+      ]
+    },
+    {
+      "table_name": "DimBillingAccount",
+      "columns": [
+        {"column_name": "Publicid", "data_type": "str", "nullable": false},
+        {"column_name": "BeanVersion", "data_type": "str", "nullable": true}
+      ]
+    }
+  ],
+  "joins": [
+    {
+      "left_table": "OLE_SRC - GuideWire",
+      "right_table": "DimBillingAccount",
+      "join_type": "LOOKUP",
+      "condition": "PublicID = Publicid"
+    }
+  ],
+  "transformations": [
+    {
+      "type": "ROW_COUNT",
+      "description": "Count all source rows",
+      "logic": "VariableName: User::SourceCount"
+    },
+    {
+      "type": "DERIVED",
+      "description": "Add BatchID column from SSIS variable",
+      "logic": "BatchID = @[User::BatchID]"
+    },
+    {
+      "type": "LOOKUP",
+      "description": "Lookup BeanVersion from DimBillingAccount",
+      "logic": "SELECT Publicid, BeanVersion FROM DimBillingAccount; Join: PublicID = Publicid"
+    },
+    {
+      "type": "CONDITIONAL_SPLIT",
+      "description": "Split rows by BeanVersion match",
+      "logic": "BeanVersion == EDWBeanVersion"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Count unchanged rows",
+      "logic": "VariableName: User::UnChangeCount"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Count updated rows",
+      "logic": "VariableName: User::UpdateCount"
+    },
+    {
+      "type": "ROW_COUNT",
+      "description": "Count inserted rows",
+      "logic": "VariableName: User::InsertCount"
+    }
+  ],
+  "target": {
+    "table_name": "DIMBILLINGACCOUNT",
+    "load_type": "INSERT_UPDATE",
+    "source": "Rows from OLE_SRC - GuideWire after transformation, routed via Conditional Split and Row Counts"
+  }
+}
